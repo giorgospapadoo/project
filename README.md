@@ -1,4 +1,6 @@
 # project
+Name: Papadopoulos Georgios
+Student Number: 5955157
 theme: Number Guessing Game
 Idea: Create a game where the program randomly selects a number, and the user has to guess it. The program gives feedback after each guess.
 Steps:
