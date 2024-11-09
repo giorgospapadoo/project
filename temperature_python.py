@@ -8,29 +8,36 @@ This is a temporary script file.
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
-from datetime import datetime, timedelta
+import toml
 
-# Step 1: Function to generate the dummy dataset
-def generate_dummy_temperature_data():
-    """
-    This function generates a dummy dataset with daily temperatures
-    for the last 12 monthswith a range between -5°C and 25°C to be in 
-    accordance with the real values.
-    """
-    end_date = datetime.today()  # Current date
-    start_date = end_date - timedelta(days=365)  # 12 months ago from today
+# Step 1: Load data from the TOML file
+with open('dataFrame.toml', 'r') as f:
+    data = toml.load(f)
 
-    # Create a date range from start to end date with a daily frequency
-    dates = pd.date_range(start=start_date, end=end_date, freq='D')
+# Extracting data from nested structure in the TOML file
+# Since we structured it as "temperature_data", we extract that list
+temperature_data = data["temperature_data"]
 
-    # Random temperature values between -5°C and 25°C
-    np.random.seed(20)  
-    temperatures = np.random.uniform(low=0, high=25, size=len(dates))
+# Create lists for dates and temperatures based on the loaded data
+dates = [entry["date"] for entry in temperature_data]
+temps = [entry["temperature"] for entry in temperature_data]
 
-    # Create a DataFrame with dates and temperatures
-    df = pd.DataFrame({'date': dates, 'temperature': temperatures})
+# Store data in a DataFrame
+df = pd.DataFrame({'date': dates, 'temperature': temps})
 
-    return df
+df['date'] = pd.to_datetime(df['date'])
+
+# Ensure that 'temperature' values are numeric
+df['temperature'] = pd.to_numeric(df['temperature'], errors='coerce')
+
+# Check for any non-numeric entries that might have been converted to NaN
+if df['temperature'].isna().any():
+    print("Warning: Non-numeric values found in temperature column, replaced with NaN.")
+    # Optionally, drop rows with NaN in the temperature column if needed
+    df = df.dropna(subset=['temperature'])
+
+
+print(df['date'])
 
 # Step 2: Function to calculate the monthly average temperatures
 def calculate_monthly_averages(df):
@@ -52,7 +59,6 @@ def calculate_monthly_averages(df):
 def calculate_monthly_extremes(df):
     """
     This function calculates the highest and lowest temperatures for each month.
-
     """
     df['year_month'] = df['date'].dt.to_period('M')
 
@@ -84,10 +90,8 @@ def plot_monthly_temperatures(monthly_avg, monthly_max, monthly_min):
 
     plt.show()
 
-
+# Main Script Execution
 print("Generating dummy temperature data for the past 12 months...")
-# Generate dummy data
-df = generate_dummy_temperature_data()
 print("Calculating monthly average temperatures...")
 # Calculate monthly average temperatures
 monthly_avg = calculate_monthly_averages(df)
@@ -98,6 +102,3 @@ print("Plotting the temperature data...")
 # Plot the monthly temperature data
 plot_monthly_temperatures(monthly_avg, monthly_max, monthly_min)
 print("Temperature data plot complete.")
-
-
-
